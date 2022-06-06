@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+    db:
+        image: mysql:5.7
+        container_name: db
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: db
+            MYSQL_USER: user
+            MYSQL_PASSWORD: password
+            MYSQL_TCP_PORT: 3308
+            TZ: 'Asia/Tokyo'
+            command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
+        volumes:
+            - ./docker/db/data:/var/lib/mysql
+            - ./docker/db/my.cnf:/etc/mysql/conf.d/my.cnf
+        ports:
+            - "3308:3306"
+        expose:
+            - 3308
+    web:
+        build: .
+        restart: always
+        container_name: web
+        command: python manage.py runserver 0.0.0.0:8888
+        links:
+            - db
+        volumes:
+            - .:/code
+        ports:
+            - "8888:8888"
+        depends_on:
+            - db
+            - redis
+
+    redis:
+      container_name: redis
+      image: redis:6-alpine
